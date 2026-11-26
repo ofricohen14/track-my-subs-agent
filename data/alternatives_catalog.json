@@ -1,0 +1,108 @@
+{
+  "source": "internal_synthetic_catalog_v1",
+  "updated_at": "2026-11-22",
+  "categories": {
+    "streaming": [
+      {
+        "service_name": "Amazon Prime Video",
+        "monthly_price": 20.0,
+        "currency": "ILS",
+        "notes": "ספריית סדרות וסרטים + משלוחים"
+      },
+      {
+        "service_name": "Apple TV+",
+        "monthly_price": 29.9,
+        "currency": "ILS",
+        "notes": "תכני מקור באיכות 4K"
+      },
+      {
+        "service_name": "Disney+",
+        "monthly_price": 44.9,
+        "currency": "ILS",
+        "notes": "תכני דיסני, מארוול ופיקסאר"
+      },
+      {
+        "service_name": "Netflix Basic",
+        "monthly_price": 32.9,
+        "currency": "ILS",
+        "notes": "צפייה במסך אחד באיכות HD"
+      }
+    ],
+    "fitness": [
+      {
+        "service_name": "Profit Gym",
+        "monthly_price": 150.0,
+        "currency": "ILS",
+        "notes": "חדר כושר בפריסה ארצית ללא התחייבות"
+      },
+      {
+        "service_name": "Space Gym",
+        "monthly_price": 179.0,
+        "currency": "ILS",
+        "notes": "חדר כושר וחוגים"
+      },
+      {
+        "service_name": "Country Club Local",
+        "monthly_price": 200.0,
+        "currency": "ILS",
+        "notes": "חדר כושר ובריכה"
+      }
+    ],
+    "music": [
+      {
+        "service_name": "YouTube Music",
+        "monthly_price": 19.9,
+        "currency": "ILS",
+        "notes": "מוזיקה ללא פרסומות"
+      },
+      {
+        "service_name": "Spotify Student",
+        "monthly_price": 11.9,
+        "currency": "ILS",
+        "notes": "מסלול סטודנטים מוזל"
+      }
+    ],
+    "cloud": [
+      {
+        "service_name": "Google One 100GB",
+        "monthly_price": 8.0,
+        "currency": "ILS",
+        "notes": "אחסון ענן 100GB"
+      },
+      {
+        "service_name": "iCloud+ 200GB",
+        "monthly_price": 12.9,
+        "currency": "ILS",
+        "notes": "אחסון ענן למשתמשי אפל"
+      }
+    ],
+    "internet": [
+      {
+        "service_name": "Partner Fiber 300Mb",
+        "monthly_price": 80.0,
+        "currency": "ILS",
+        "notes": "סיב אופטי 300 מגה"
+      },
+      {
+        "service_name": "Cellcom Fiber 600Mb",
+        "monthly_price": 99.0,
+        "currency": "ILS",
+        "notes": "סיב אופטי 600 מגה"
+      }
+    ],
+    "mobile": [
+      {
+        "service_name": "019 Mobile 500GB",
+        "monthly_price": 29.9,
+        "currency": "ILS",
+        "notes": "חבילת 5G ללא התחייבות"
+      },
+      {
+        "service_name": "WeCom 300GB",
+        "monthly_price": 34.9,
+        "currency": "ILS",
+        "notes": "כולל שיחות והודעות ללא הגבלה"
+      }
+    ]
+  }
+}
