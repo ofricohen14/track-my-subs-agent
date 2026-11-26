@@ -1,0 +1,142 @@
+{
+  "scenario": "normal",
+  "timestamp_utc": "2026-11-26T23:04:18.602480+00:00",
+  "model_mode": "mock",
+  "user_id": "user_001",
+  "thread_id": "thread_normal",
+  "status": "success",
+  "steps_used": 3,
+  "max_steps": 7,
+  "events": [
+    {
+      "event": "USER_MESSAGE",
+      "step": 0,
+      "content": "תראה לי חלופות למנוי NETFLIX שלי"
+    },
+    {
+      "event": "TOOL_REQUEST",
+      "step": 1,
+      "tool": "search_alternatives",
+      "args": {
+        "category": "streaming",
+        "current_price": 69.9,
+        "max_results": 3
+      },
+      "approved": false
+    },
+    {
+      "event": "TOOL_OBSERVATION",
+      "step": 1,
+      "tool": "search_alternatives",
+      "status": "ok",
+      "result": {
+        "status": "ok",
+        "data": {
+          "source": "internal_synthetic_catalog_v1",
+          "updated_at": "2026-11-22",
+          "category": "streaming",
+          "current_price": 69.9,
+          "alternatives": [
+            {
+              "service_name": "Amazon Prime Video",
+              "monthly_price": 20.0,
+              "currency": "ILS",
+              "notes": "ספריית סדרות וסרטים + משלוחים",
+              "monthly_savings": 49.9,
+              "annual_savings": 598.8
+            },
+            {
+              "service_name": "Apple TV+",
+              "monthly_price": 29.9,
+              "currency": "ILS",
+              "notes": "תכני מקור באיכות 4K",
+              "monthly_savings": 40.0,
+              "annual_savings": 480.0
+            },
+            {
+              "service_name": "Netflix Basic",
+              "monthly_price": 32.9,
+              "currency": "ILS",
+              "notes": "צפייה במסך אחד באיכות HD",
+              "monthly_savings": 37.0,
+              "annual_savings": 444.0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "event": "TOOL_REQUEST",
+      "step": 2,
+      "tool": "calculate_expenses",
+      "args": {
+        "current_prices": [
+          69.9
+        ],
+        "alternative_prices": [
+          20.0
+        ]
+      },
+      "approved": false
+    },
+    {
+      "event": "TOOL_OBSERVATION",
+      "step": 2,
+      "tool": "calculate_expenses",
+      "status": "ok",
+      "result": {
+        "status": "ok",
+        "data": {
+          "monthly_total": 69.9,
+          "annual_total": 838.8,
+          "alternative_monthly_total": 20.0,
+          "monthly_savings": 49.9,
+          "annual_savings": 598.8
+        }
+      }
+    },
+    {
+      "event": "FINAL_RESPONSE",
+      "step": 3,
+      "status": "success",
+      "context_messages_count": 6,
+      "text": "אתה משלם כיום 69.90 ש״ח בחודש עבור Netflix. במקור internal_synthetic_catalog_v1 נמצאה חלופה משתלמת יותר: Amazon Prime Video במחיר 20.00 ש״ח בחודש (ספריית סדרות וסרטים + משלוחים). מעבר יחסוך לך 49.90 ש״ח בחודש ו-598.80 ש״ח בשנה (חושב באמצעות calculate_expenses). האם תרצה שאעדכן את רשימת המנויים שלך?"
+    }
+  ],
+  "tool_logs": [
+    {
+      "step": 1,
+      "tool": "search_alternatives",
+      "args": {
+        "category": "streaming",
+        "current_price": 69.9,
+        "max_results": 3
+      },
+      "session_user_id": "user_001",
+      "decision": "executed",
+      "reason": "success",
+      "attempts": 1,
+      "status": "ok",
+      "latency_ms": 0.2
+    },
+    {
+      "step": 2,
+      "tool": "calculate_expenses",
+      "args": {
+        "current_prices": [
+          69.9
+        ],
+        "alternative_prices": [
+          20.0
+        ]
+      },
+      "session_user_id": "user_001",
+      "decision": "executed",
+      "reason": "success",
+      "attempts": 1,
+      "status": "ok",
+      "latency_ms": 0.03
+    }
+  ],
+  "final_response": "אתה משלם כיום 69.90 ש״ח בחודש עבור Netflix. במקור internal_synthetic_catalog_v1 נמצאה חלופה משתלמת יותר: Amazon Prime Video במחיר 20.00 ש״ח בחודש (ספריית סדרות וסרטים + משלוחים). מעבר יחסוך לך 49.90 ש״ח בחודש ו-598.80 ש״ח בשנה (חושב באמצעות calculate_expenses). האם תרצה שאעדכן את רשימת המנויים שלך?"
+}

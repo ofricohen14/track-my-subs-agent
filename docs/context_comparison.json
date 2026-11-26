@@ -1,0 +1,50 @@
+[
+  {
+    "strategy_id": "full",
+    "strategy_label": "היסטוריה מלאה (full)",
+    "context_messages": 13,
+    "chars": 1171,
+    "estimated_tokens": 290,
+    "pct_of_full": 100.0,
+    "required_info_present": true,
+    "answer_correctness": "נכונה ומלאה",
+    "actual_answer": "לפי ההקשר שבידי, תקציב המקסימום שלך הוא 250 ש״ח בחודש, והתנאי החשוב לך הוא חלופות ללא התחייבות שנתית.",
+    "what_is_lost": "לא אבד מידע (כל ההיסטוריה נשלחה, אך עלות הטוקנים גדלה בכל תור)"
+  },
+  {
+    "strategy_id": "last_n",
+    "strategy_label": "4 הודעות אחרונות (last_n=4)",
+    "context_messages": 5,
+    "chars": 494,
+    "estimated_tokens": 123,
+    "pct_of_full": 42.4,
+    "required_info_present": false,
+    "answer_correctness": "שגויה / חסרה (המידע נפל מהחלון)",
+    "actual_answer": "המידע על תקציב המקסימום החודשי ותנאי ההתחייבות אינו מופיע בהקשר הנוכחי — אנא צייני אותם שוב.",
+    "what_is_lost": "אבדו ההודעות הראשונות: תקציב המקסימום (250 ש״ח) והעדפת ׳ללא התחייבות שנתית׳"
+  },
+  {
+    "strategy_id": "notes",
+    "strategy_label": "זיכרון מובנה + 4 אחרונות (notes)",
+    "context_messages": 7,
+    "chars": 612,
+    "estimated_tokens": 152,
+    "pct_of_full": 52.4,
+    "required_info_present": true,
+    "answer_correctness": "נכונה ומלאה",
+    "actual_answer": "לפי ההקשר שבידי, תקציב המקסימום שלך הוא 250 ש״ח בחודש, והתנאי החשוב לך הוא חלופות ללא התחייבות שנתית.",
+    "what_is_lost": "אבדו פירוטי הביניים המילוליים של אמצע השיחה (למשל שאלת ההבהרה על Apple)"
+  },
+  {
+    "strategy_id": "summary_and_last_n",
+    "strategy_label": "סיכום + 4 אחרונות (summary_and_last_n)",
+    "context_messages": 6,
+    "chars": 681,
+    "estimated_tokens": 169,
+    "pct_of_full": 58.3,
+    "required_info_present": true,
+    "answer_correctness": "נכונה ומלאה",
+    "actual_answer": "לפי ההקשר שבידי, תקציב המקסימום שלך הוא 250 ש״ח בחודש, והתנאי החשוב לך הוא חלופות ללא התחייבות שנתית.",
+    "what_is_lost": "אבד הנוסח המדויק של הודעות הביניים (נשמר רק סיכום דחוס; דורש קריאת מודל לסיכום)"
+  }
+]
