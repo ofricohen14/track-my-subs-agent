@@ -10,6 +10,9 @@ from __future__ import annotations
 import csv
 import json
 import math
+import signal
+import threading
+from contextlib import contextmanager
 from datetime import date
 import time
 from collections import defaultdict
@@ -43,6 +46,29 @@ class PermanentError(Exception):
     def __init__(self, message: str, error_type: str = "permanent_error") -> None:
         super().__init__(message)
         self.error_type = error_type
+
+
+class _DeadlineExceeded(BaseException):
+    """Internal interruption that is not swallowed by a broad Exception handler."""
+
+
+@contextmanager
+def tool_deadline(seconds):
+    """Enforce a deadline in the Linux main thread (Google Colab)."""
+    if not hasattr(signal, "setitimer") or threading.current_thread() is not threading.main_thread():
+        raise PermanentError("Timeout requires the Linux main thread.", "unsupported_runtime")
+    if signal.getitimer(signal.ITIMER_REAL) != (0.0, 0.0):
+        raise PermanentError("Another timer is active.", "unsupported_runtime")
+    previous = signal.getsignal(signal.SIGALRM)
+    def interrupt(signum, frame):
+        raise _DeadlineExceeded()
+    signal.signal(signal.SIGALRM, interrupt)
+    signal.setitimer(signal.ITIMER_REAL, seconds)
+    try:
+        yield
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        signal.signal(signal.SIGALRM, previous)
 
 
 # ---------------------------------------------------------------------------
@@ -605,29 +631,24 @@ class ToolExecutor:
 
         for attempt in range(1, max_attempts + 1):
             try:
-                call_start = time.perf_counter()
-                if self.fault_injector is not None:
-                    self.fault_injector(name, attempt)
+                if not math.isfinite(timeout) or timeout <= 0:
+                    raise PermanentError("Timeout must be positive and finite.", "invalid_input")
+                with tool_deadline(timeout):
+                    if self.fault_injector is not None:
+                        self.fault_injector(name, attempt)
 
-                if name == "import_transactions":
-                    data = self._impl_import_transactions(validated_args)
-                elif name == "manage_subscriptions":
-                    data = self._impl_manage_subscriptions(validated_args, session_user_id)
-                elif name == "calculate_expenses":
-                    data = self._impl_calculate_expenses(validated_args)
-                elif name == "search_alternatives":
-                    data = self._impl_search_alternatives(validated_args)
-                elif name == "delete_subscription":
-                    data = self._impl_delete_subscription(validated_args, session_user_id)
-                else:
-                    raise PermanentError(f"Unhandled tool '{name}'.", "permission_denied")
-
-                elapsed = time.perf_counter() - call_start
-                if elapsed > timeout:
-                    raise TransientError(
-                        f"Tool '{name}' exceeded timeout ({elapsed:.2f}s > {timeout}s).",
-                        "timeout",
-                    )
+                    if name == "import_transactions":
+                        data = self._impl_import_transactions(validated_args)
+                    elif name == "manage_subscriptions":
+                        data = self._impl_manage_subscriptions(validated_args, session_user_id)
+                    elif name == "calculate_expenses":
+                        data = self._impl_calculate_expenses(validated_args)
+                    elif name == "search_alternatives":
+                        data = self._impl_search_alternatives(validated_args)
+                    elif name == "delete_subscription":
+                        data = self._impl_delete_subscription(validated_args, session_user_id)
+                    else:
+                        raise PermanentError(f"Unhandled tool '{name}'.", "permission_denied")
 
                 _record("executed", "ok", attempt, "success")
                 return ok(data)
@@ -635,6 +656,16 @@ class ToolExecutor:
             except PermanentError as exc:
                 _record("executed", "error", attempt, f"permanent:{exc.error_type}")
                 return err(exc.error_type, str(exc), retryable=False)
+
+            except _DeadlineExceeded:
+                if not contract["idempotent"]:
+                    _record("executed", "error", attempt, "write_timeout_outcome_unknown")
+                    return err("timeout", "Write outcome may be unknown; check state before retrying.", False)
+                if attempt < max_attempts:
+                    time.sleep(backoff_base * (2 ** (attempt - 1)))
+                    continue
+                _record("executed", "error", attempt, "timeout")
+                return err("timeout", "Tool exceeded the time limit.", True)
 
             except TransientError as exc:
                 last_transient = exc

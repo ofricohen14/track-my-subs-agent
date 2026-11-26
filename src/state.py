@@ -55,6 +55,7 @@ class AgentState(BaseModel):
     uploaded_transactions: list[dict[str, Any]] = Field(default_factory=list)
     pending_subscriptions: list[dict[str, Any]] = Field(default_factory=list)
     last_alternatives: list[dict[str, Any]] = Field(default_factory=list)
+    pending_action: dict[str, Any] | None = None
 
 
 def apply_event(
@@ -75,7 +76,7 @@ def apply_event(
         "step": state.step + (1 if role == "assistant" else 0),
     }
     if extra_updates:
-        allowed = {"summary", "uploaded_transactions", "pending_subscriptions", "last_alternatives"}
+        allowed = {"summary", "uploaded_transactions", "pending_subscriptions", "last_alternatives", "pending_action"}
         if not set(extra_updates).issubset(allowed):
             raise ValueError("Invalid state update fields")
         updates.update(extra_updates)

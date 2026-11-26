@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -15,7 +16,7 @@ from src.state import (
     apply_event,
     build_context,
 )
-from src.tools import MAX_RETRIES_DEFAULT, ToolExecutor
+from src.tools import MAX_RETRIES_DEFAULT, ToolExecutor, _infer_category
 
 
 class MockDecisionModel:
@@ -100,6 +101,31 @@ class MockDecisionModel:
                     "האם תרצה לאשר את שמירתם במערכת?"
                 ),
             }
+
+        # הוספה ידנית או עדכון בפורמט מפורש במודל המדומה.
+        manual = re.fullmatch(r"(הוסף|הוסיפי|הוספה|עדכן|עדכני|עדכון|add|update)\s+(.+?)\s+(?:במחיר\s+|price\s+)?(\d+(?:\.\d{1,2})?)(?:\s*(?:שח|ש״ח|₪|ILS))?", user_message.strip(), re.IGNORECASE)
+        if manual:
+            verb, service, amount = manual.groups()
+            action = "add" if verb.lower() in {"הוסף", "הוסיפי", "הוספה", "add"} else "update"
+            matches = [sub for sub in memory_store.get_subscriptions(state.user_id)
+                       if sub.service_name.casefold() == service.casefold()]
+            if action == "update" and len(matches) != 1:
+                return {"kind": "clarify", "status": "clarification_needed", "text": "לא נמצא מנוי יחיד לעדכון. ציין את שמו המדויק."}
+            if action == "add" and matches:
+                return {"kind": "clarify", "status": "clarification_needed", "text": "המנוי כבר קיים. אפשר לבקש לעדכן אותו."}
+            if matches:
+                record = matches[0]
+                args = record.model_dump()
+            else:
+                category, _ = _infer_category(service)
+                args = {"subscription_id": "sub_" + re.sub(r"[^\w]+", "_", service.casefold()),
+                        "service_name": service, "billing_cycle": "monthly", "category": category or "other"}
+            args.update(action=action, amount=float(amount))
+            if not observations:
+                return {"kind": "tool", "name": "manage_subscriptions", "args": args}
+            result = observations[-1]
+            return {"kind": "final", "status": "success" if result["status"] == "ok" else "tool_failed",
+                    "text": "המנוי נשמר." if result["status"] == "ok" else result["error"]["message"]}
 
         # 3. Specific subscription delete flow (requires approval)
         if ("מחק" in text or "הסר" in text or "delete" in text) and ("netflix" in text or "נטפליקס" in text):
@@ -345,6 +371,15 @@ class SubscriptionAgent:
         state = apply_event(state, "user", user_message)
         self.session_store.save_thread(state)
 
+        # אישור מפורש תקף רק לפעולה שהוצגה באותה שיחה.
+        pending = state.pending_action
+        reply = user_message.strip().lower().rstrip(".!?")
+        confirmed = pending if reply in {"כן", "מאשר", "מאשרת", "yes", "approve"} else None
+        rejected = pending is not None and reply in {"לא", "דוחה", "no", "reject"}
+        if pending is not None:
+            state = state.model_copy(update={"pending_action": None}, deep=True)
+            self.session_store.save_thread(state)
+
         observations: list[dict[str, Any]] = []
         trace_events: list[dict[str, Any]] = [
             {
@@ -369,7 +404,16 @@ class SubscriptionAgent:
             )
 
             try:
-                decision = self.model.decide(user_message, state, self.memory_store, observations, context=context_sent)
+                if rejected:
+                    decision = {"kind": "final", "status": "approval_rejected", "text": "הפעולה בוטלה ללא שינוי במנויים."}
+                elif confirmed is not None and not observations:
+                    decision = {"kind": "tool", **confirmed}
+                elif confirmed is not None:
+                    result = observations[-1]
+                    decision = {"kind": "final", "status": "success" if result["status"] == "ok" else "tool_failed",
+                                "text": "הפעולה המאושרת בוצעה." if result["status"] == "ok" else "הפעולה לא הושלמה: " + result["error"]["message"]}
+                else:
+                    decision = self.model.decide(user_message, state, self.memory_store, observations, context=context_sent)
             except Exception:
                 final_status = "model_failed"
                 final_text = "לא ניתן לקבל החלטה מהמודל כרגע."
@@ -407,9 +451,7 @@ class SubscriptionAgent:
                 self.session_store.save_thread(state)
 
                 # אישור מגיע מהיישום, עבור כלי וארגומנטים מסוימים בלבד.
-                action_approved = approved is True and approved_action == {"name": tool_name, "args": tool_args}
-                if action_approved:
-                    approved_action = None  # אישור חד-פעמי
+                action_approved = confirmed == {"name": tool_name, "args": tool_args} and not observations
 
                 trace_events.append(
                     {
@@ -456,6 +498,18 @@ class SubscriptionAgent:
                         "result": result,
                     }
                 )
+                if result["status"] == "error" and result["error"]["type"] == "approval_required":
+                    pending_action = {"name": tool_name, "args": tool_args}
+                    final_status = "approval_required"
+                    final_text = (f"הפעולה המבוקשת: {tool_name} "
+                                  f"{json.dumps(tool_args, ensure_ascii=False)}. "
+                                  "להמשך השב כן או לא.")
+                    state = state.model_copy(update={"pending_action": pending_action}, deep=True)
+                    if state.step < state.max_steps:
+                        state = apply_event(state, "assistant", final_text)
+                    self.session_store.save_thread(state)
+                    trace_events.append({"event": "AWAIT_APPROVAL", "step": state.step, "tool": tool_name})
+                    break
                 continue
 
             # Unknown decision kind -> safe stop
