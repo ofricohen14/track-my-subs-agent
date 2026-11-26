@@ -1,2 +1,40 @@
-# track-my-subs-agent
-AI Agent for Subscription Management - Milestone 1
+# Track My Subs — סוכן AI לניהול מנויים
+
+**מגישות:** עופרי כהן, מיכל זטלאוי | קורס סוכני AI | אבן דרך 1
+
+הסוכן מזהה חיובים חוזרים מקובצי CSV, מנהל רשימת מנויים באישור המשתמש, מחשב הוצאות ומציע חלופות מתוך קטלוג מקומי סינתטי. אין חיבור לבנק או ביטול מנויים מול ספקים. המחירים מיועדים להדגמה בלבד.
+
+## התקנה והרצה
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ofricohen14/track-my-subs-agent/blob/main/track_my_subs_milestone1.ipynb)
+
+פתחו את המחברת ובחרו Runtime → Run all. המחברת משכפלת את המאגר לתיקייה חדשה, מתקינה את התלויות, מריצה בדיקות ומדגימה את הסוכן ואת השוואת ההקשרים. לצורך שחזור הגרסה המוגשת יש להגדיר את `COMMIT` בתא ההתקנה למזהה המצוין בהגשה.
+
+פקודות ההתקנה והבדיקה (בסביבת Linux/Colab):
+
+```bash
+git clone https://github.com/ofricohen14/track-my-subs-agent.git
+cd track-my-subs-agent
+pip install -r requirements.txt
+python -m pytest -v
+```
+
+ברירת המחדל היא `MockDecisionModel`, ללא מפתח API. להרצה נוספת עם Gemini ניתן להגדיר `GEMINI_API_KEY` ב-Colab Secrets או כמשתנה סביבה. שימוש במודל אמיתי עשוי להיות כרוך בתשלום; אין להעלות מפתחות למאגר. ההרצה עם Gemini טרם אומתה.
+
+## מבנה המאגר
+
+- `src/tools.py` — חוזים, אימות, הרשאות, ביצוע כלים וטיפול בכשלים.
+- `src/state.py` — סכמת מצב, ניהול שיחות, זיכרון ובניית הקשר.
+- `src/agent.py` — לולאת הסוכן, מתאמי מודל ועקבות.
+- `data/` — עסקאות וקטלוג חלופות סינתטיים.
+- `tests/` — בדיקות אוטומטיות לכלים, למצב ולסוכן.
+- `docs/milestone1.md` — תיעוד החלטות התכנון והמגבלות.
+- `docs/ai_usage.md` — נספח שימוש ב-AI.
+- `docs/context_comparison.json` ו-`docs/traces/` — תוצאות השוואה ועקבות הרצה.
+- `track_my_subs_milestone1.ipynb` — מחברת הרצה.
+
+## תוצאות ומגבלות
+
+בהרצת Colab דווח על 42 בדיקות שעברו (22 לכלים, 8 למצב ו-12 לסוכן), עם pytest 8.3.4 ו-Python 3.13.18. ההרצה המדומה אינה הערכה של איכות מודל שפה אמיתי. הזיכרון נשמר במהלך חיי מופע היישום בלבד; מגבלת הזמן ממומשת עבור תהליכון ראשי ב-Linux. מחירים ונתוני עסקאות הם סינתטיים.
+
+**קרדיט:** בסיס המימוש והבדיקות נוצר בידי מיכל זטלאוי; הגרסה הנוכחית עובדה במסגרת העבודה המשותפת ובסיוע AI, כמפורט בנספח.
